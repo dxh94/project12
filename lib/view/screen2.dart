@@ -413,7 +413,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
         _projectDetails!.photos.removeAt(_selectedImageIndex!);
         _listFrameTemp.removeAt(_selectedImageIndex!);
         _selectedImageIndex = null;
-      });
+      }
+      );
     }
   }
 

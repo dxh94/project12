@@ -24,7 +24,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
       final response =
           await http.get(Uri.parse('https://tapuniverse.com/xproject'));
       if (response.statusCode == 200) {
-        List<dynamic> abc = json.decode(response.body)['projects'];
+        List abc = json.decode(response.body)['projects'];
         for (int i = 0; i < abc.length; i++) {
           ProjectModel item =
               FlutterConvert().convertJsonToProjectModel(abc[i]);

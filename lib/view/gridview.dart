@@ -1,4 +1,5 @@
-
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:project12/helpers/image_helper.dart';
 import 'package:project12/model/sub_models/image_project.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -6,23 +7,71 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
 
-class PhotoSelectionScreen extends StatefulWidget {
+class PhotoSelectionScreen extends ConsumerStatefulWidget {
   final Function(List<ImageProject> values) onUpdateImageSelection;
   PhotoSelectionScreen({required this.onUpdateImageSelection});
   @override
   _PhotoSelectionScreenState createState() => _PhotoSelectionScreenState();
 }
 
-class _PhotoSelectionScreenState extends State<PhotoSelectionScreen> {
+class _PhotoSelectionScreenState extends ConsumerState<PhotoSelectionScreen> {
   List<ImageProject> _listImage = [];
   List<AssetPathEntity> _albumList = [];
   AssetPathEntity? _selectedAlbum;
   List<ImageProject> _selectedPhotos = [];
-
+  final ScrollController _scrollController = ScrollController();
   @override
   void initState() {
     super.initState();
     _fetchAlbums();
+    _scrollController.addListener(() async {
+      if (_scrollController.offset >=
+          _scrollController.position.maxScrollExtent) {
+        print("_listImage ${_listImage.length}");
+        List<ImageProject> listImage = [];
+
+        var listAssetsEntity = await VideoHelpers()
+            .getVideosByAlbum(_selectedAlbum!, _albumList, _listImage.length);
+        for (var i = 0; i < listAssetsEntity.length; i++) {
+          var file = await listAssetsEntity[i].file;
+          if (file != null) {
+            listImage.add(ImageProject(file: file));
+          }
+        }
+        _listImage.addAll(List.from(listImage));
+        setState(() {});
+      }
+    });
+    PhotoManager.addChangeCallback(changeNotify);
+    PhotoManager.startChangeNotify();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    PhotoManager.removeChangeCallback(changeNotify);
+    PhotoManager.stopChangeNotify();
+  }
+
+  void changeNotify(MethodCall call) async {
+    dynamic args = call.arguments;
+    var type = args["type"];
+
+    if (type != null && ["insert", "delete"].contains(type)) {
+      print("type ${type}");
+      // var listAssetsEntity =
+      //     await VideoHelpers().getVideosByAlbum(_selectedAlbum!, _albumList, 0);
+      // for (var i = 0; i < listAssetsEntity.length; i++) {
+      //   var file = await listAssetsEntity[i].file;
+      //   if (file != null &&
+      //       !_listImage.map((e) => e.file).toList().contains(file)) {
+      //     _listImage.add(ImageProject(file: file));
+      //   }
+      // }
+      // setState(() {});
+
+    //  updateImageProject();
+    }
   }
 
   Future<void> _fetchAlbums() async {
@@ -60,11 +109,19 @@ class _PhotoSelectionScreenState extends State<PhotoSelectionScreen> {
 
   Future<void> updateImageProject() async {
     if (_selectedAlbum != null) {
+      List<AssetEntity> listImage = [];
       _listImage = [];
-      var listAssetsEntity =
-          await VideoHelpers().getVideosByAlbum(_selectedAlbum!, _albumList);
+      print("listAssetsEntity before");
+      var listAssetsEntity = await VideoHelpers()
+          .getVideosByAlbum(_selectedAlbum!, _albumList, _listImage.length);
+      print("listAssetsEntity after");
+
       for (var i = 0; i < listAssetsEntity.length; i++) {
-        var file = await listAssetsEntity[i].file;
+        listImage.add(listAssetsEntity[i]);
+      }
+      // handleUpdateListImage();
+      for (var i = 0; i < listImage.length; i++) {
+        var file = await listImage[i].file;
         if (file != null) {
           _listImage.add(ImageProject(file: file));
         }
@@ -72,6 +129,7 @@ class _PhotoSelectionScreenState extends State<PhotoSelectionScreen> {
     }
     setState(() {});
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +185,7 @@ class _PhotoSelectionScreenState extends State<PhotoSelectionScreen> {
                 crossAxisSpacing: 4.0,
                 mainAxisSpacing: 4.0,
               ),
+              controller: _scrollController,
               itemCount: _listImage.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
@@ -193,7 +252,7 @@ class _PhotoSelectionScreenState extends State<PhotoSelectionScreen> {
     );
   }
 
-    Future<void> _addImages() async {
+  Future<void> _addImages() async {
     widget.onUpdateImageSelection(_selectedPhotos);
     Navigator.of(context).pop();
   }
