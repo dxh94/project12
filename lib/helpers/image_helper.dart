@@ -1,7 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart';
 
-class ImageHelpers {
+class VideoHelpers {
   Future<List<AssetPathEntity>> getVideoAlbums() async {
     print("getVideoAlbums begin");
     List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
@@ -17,7 +19,7 @@ class ImageHelpers {
   }
 
   Future<List<AssetEntity>> getVideosByAlbum(
-      AssetPathEntity album, List<AssetPathEntity> listAlbums) async {
+      AssetPathEntity album, List<AssetPathEntity> listAlbums, int currentIndex) async {
     List<AssetEntity> listImage = [];
     print("getVideosByAlbum album ${album}");
     AssetPathEntity? checkEntity =
@@ -26,11 +28,12 @@ class ImageHelpers {
 
     if (checkEntity != null) {
       int end = await album.assetCountAsync;
+      print("getVideosByAlbum ${end}");
       if (end == 0) {
         return listImage;
       }
       List<AssetEntity> assets = await checkEntity.getAssetListRange(
-          start: 0, end: await checkEntity.assetCountAsync);
+          start: currentIndex, end: min(end, currentIndex+18));
       // assets  = assets.where((element) => element.mimeType==)
       for (int i = 0; i < assets.length; i++) {
         String mimeType = assets[i].mimeType ?? "";
