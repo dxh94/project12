@@ -7,14 +7,14 @@ import 'package:project12/view/screen2.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class ProjectListWidget extends StatefulWidget {
+class ProjectImage extends StatefulWidget {
   final ProjectRealm projectRealm;
-  ProjectListWidget({Key? key, required this.projectRealm}) : super(key: key);
+  ProjectImage({Key? key, required this.projectRealm}) : super(key: key);
   @override
   _ProjectListWidgetState createState() => _ProjectListWidgetState();
 }
 
-class _ProjectListWidgetState extends State<ProjectListWidget> {
+class _ProjectListWidgetState extends State<ProjectImage> {
   List<ProjectModel> projects = [];
 
   Future<void> fetchProjects() async {
@@ -72,7 +72,6 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    print("projects ${projects}");
     return Scaffold(
       appBar: AppBar(
         title: const Text('Project List'),

@@ -5,6 +5,6 @@ import 'package:flutter/material.dart';
 void main() {
   final projectRealm = ProjectRealm();
   runApp(MaterialApp(
-    home: ProjectListWidget(projectRealm: projectRealm),
+    home: ProjectImage(projectRealm: projectRealm),
   ));
 }

@@ -1,4 +1,3 @@
-
 import 'package:project12/helpers/image_helper.dart';
 import 'package:project12/model/sub_models/image_project.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -42,13 +41,13 @@ class _PhotoSelectionScreenState extends State<PhotoSelectionScreen> {
       }
 
       if (isGranted.isGranted) {
-        var abc = await VideoHelpers().getVideoAlbums();
+        var abc = await ImageHelpers().getVideoAlbums();
         _albumList = abc;
         _selectedAlbum = abc.firstOrNull;
         updateImageProject();
       }
     } else {
-      var abc = await VideoHelpers().getVideoAlbums();
+      var abc = await ImageHelpers().getVideoAlbums();
 
       setState(() {
         _albumList = abc;
@@ -62,7 +61,7 @@ class _PhotoSelectionScreenState extends State<PhotoSelectionScreen> {
     if (_selectedAlbum != null) {
       _listImage = [];
       var listAssetsEntity =
-          await VideoHelpers().getVideosByAlbum(_selectedAlbum!, _albumList);
+          await ImageHelpers().getVideosByAlbum(_selectedAlbum!, _albumList);
       for (var i = 0; i < listAssetsEntity.length; i++) {
         var file = await listAssetsEntity[i].file;
         if (file != null) {
@@ -193,7 +192,7 @@ class _PhotoSelectionScreenState extends State<PhotoSelectionScreen> {
     );
   }
 
-    Future<void> _addImages() async {
+  Future<void> _addImages() async {
     widget.onUpdateImageSelection(_selectedPhotos);
     Navigator.of(context).pop();
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart';
 
-class VideoHelpers {
+class ImageHelpers {
   Future<List<AssetPathEntity>> getVideoAlbums() async {
     print("getVideoAlbums begin");
     List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
