@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:project12/helpers/convert.dart';
+import 'package:project12/helpers/image_helper.dart';
 import 'package:project12/helpers/random_number.dart';
 import 'package:project12/model/sub_models/image_project.dart';
 import 'package:project12/model/sub_models/frame_model.dart';
@@ -10,11 +12,14 @@ import 'package:project12/model/sub_models/project.dart';
 import 'package:project12/repositories/project_realm.dart';
 import 'package:project12/view/gridview.dart';
 import 'package:project12/view/screen3.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 class ProjectDetailsScreen extends StatefulWidget {
   final int projectId;
@@ -42,7 +47,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   File? selectedImage;
   double _blurValue = 0.0;
   bool _isExported = false;
-  OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
@@ -71,52 +75,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
         }
       }
       setState(() {});
-    });
-  }
-
-// overlay cho duong mau xanh
-  void _showSelectionOverlay() {
-    OverlayState? overlaystate = Overlay.of(context);
-    _overlayEntry = OverlayEntry(
-        builder: (context) => Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: IgnorePointer(
-                child: Container(
-                  color: Colors.transparent,
-                  child: Stack(
-                    children: _listFrameTemp.asMap().entries.map((entry) {
-                      final int index = entry.key;
-                      final FrameTemp frameTemp = entry.value;
-                      final bool isSelected = index == _selectedImageIndex;
-                      return isSelected
-                          ? Container(
-                              decoration: BoxDecoration(
-                                  border: Border.all(
-                                color: Colors.blue,
-                                width: 4.0,
-                              )),
-                            )
-                          : SizedBox.shrink();
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ));
-    overlaystate?.insert(_overlayEntry!);
-  }
-
-  void _removeSelectionOverlay() {
-    _overlayEntry?.remove();
-  }
-
-  void _onImageTap(int index) {
-    setState(() {
-      _selectedImageIndex = index;
-      _removeSelectionOverlay();
-      _showSelectionOverlay();
     });
   }
 
@@ -269,23 +227,14 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                             Container(
                                               decoration: BoxDecoration(
                                                 border: Border.all(
-                                                    color: isSelected
-                                                        ? Colors.blue
-                                                        : Colors.transparent,
-                                                    width: 4.0),
+                                                  color: isSelected
+                                                      ? Colors.blue
+                                                      : Colors.transparent,
+                                                  width: 4.0,
+                                                ),
                                                 borderRadius:
                                                     BorderRadius.circular(12.0),
                                               ),
-                                              // decoration: BoxDecoration(
-                                              //   border: Border.all(
-                                              //     color: isSelected
-                                              //         ? Colors.blue
-                                              //         : Colors.transparent,
-                                              //     width: 4.0,
-                                              //   ),
-                                              //   borderRadius:
-                                              //       BorderRadius.circular(12.0),
-                                              // ),
                                               child: ClipRRect(
                                                 borderRadius:
                                                     BorderRadius.circular(8.0),
@@ -316,12 +265,12 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                                                 .height
                                                                 .toDouble(),
                                                             fit: BoxFit.cover,
-                                                            color: Colors.grey
-                                                                .withOpacity(0 -
-                                                                    1), // Áp dụng độ mờ đục
-                                                            colorBlendMode:
-                                                                BlendMode
-                                                                    .dstATop, // Chế độ kết hợp màu sắc
+                                                            // color: Colors.grey
+                                                            //     .withOpacity(0 -
+                                                            //         1), // Áp dụng độ mờ đục
+                                                            // colorBlendMode:
+                                                            //     BlendMode
+                                                            //         .dstATop, // Chế độ kết hợp màu sắc
                                                           ),
                                                   ],
                                                 ),
@@ -432,7 +381,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       end: Alignment.centerRight,
     );
     return SliderTheme(
-      data: const SliderThemeData(
+      data: SliderThemeData(
         trackHeight: 4.0,
         thumbColor: Colors.blue,
         thumbShape: RoundSliderThumbShape(
@@ -464,7 +413,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
         _projectDetails!.photos.removeAt(_selectedImageIndex!);
         _listFrameTemp.removeAt(_selectedImageIndex!);
         _selectedImageIndex = null;
-      });
+      }
+      );
     }
   }
 
@@ -501,11 +451,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     setState(() {});
   }
 
-  // void _onImageTap(int index) {
-  //   setState(() {
-  //     _selectedImageIndex = index;
-  //   });
-  // }
+  void _onImageTap(int index) {
+    setState(() {
+      _selectedImageIndex = index;
+    });
+  }
 
   void _onBack() {
     ProjectModel newProjectModel;
