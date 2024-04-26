@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:ffi';
-import 'dart:io';
 
+import 'dart:io';
 import 'package:project12/helpers/convert.dart';
+
 import 'package:project12/helpers/random_number.dart';
 import 'package:project12/model/sub_models/image_project.dart';
 import 'package:project12/model/sub_models/frame_model.dart';
@@ -12,6 +12,7 @@ import 'package:project12/model/sub_models/project.dart';
 import 'package:project12/repositories/project_realm.dart';
 import 'package:project12/view/gridview.dart';
 import 'package:project12/view/screen3.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -37,9 +38,9 @@ class ProjectDetailsScreen extends StatefulWidget {
 class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   ProjectModel? _projectDetails;
   List<FrameTemp> _listFrameTemp = [];
-  double _scale = 1.0;
+  double _scaleCanvas = 1.0, _previousScaleCanvas = 1.0;
   double _previousRotation = 0.0;
-  int? _selectedImageIndex;
+  int? _indexSelected;
   Frame? _currentFrame;
   File? selectedImage;
   double _blurValue = 0.0;
@@ -183,210 +184,174 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                 ],
               ),
               Expanded(
-                child: Container(
-                  child: (_projectDetails == null)
-                      ? const Center(child: CircularProgressIndicator())
-                      : Transform.scale(
-                          //scale canvas
-                          scale: _scale,
-                          child: Stack(
-                            children: _listFrameTemp.map((item) {
-                              final index = _listFrameTemp
-                                  .map((e) => e.id)
-                                  .toList()
-                                  .indexOf(item.id);
-                              final photo = item;
-                              final imageMedia =
-                                  _projectDetails!.photos[index].media;
-                              final imageFrame = item;
-                              final isSelected = index == _selectedImageIndex;
-                              return Positioned(
-                                top: imageFrame.y.toDouble(),
-                                left: imageFrame.x.toDouble(),
-                                child: GestureDetector(
-                                  onTap: () => _onImageTap(index),
-                                  child: Stack(
-                                    clipBehavior: Clip.none,
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors
-                                                .transparent, // Initially transparent border
-                                            width: 4.0,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12.0),
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                          child: Image.network(
-                                            // Assuming you're always using network images
-                                            imageMedia,
-                                            width: imageFrame.width.toDouble(),
-                                            height:
-                                                imageFrame.height.toDouble(),
-                                            fit: BoxFit.cover,
-                                          ),
+                child: Stack(
+                  children: [
+                    // images + canvas
+                    Container(
+                      child: (_projectDetails == null)
+                          ? const Center(child: CircularProgressIndicator())
+                          : Transform.scale(
+                              //scale canvas
+                              scale: _scaleCanvas,
+                              child: Stack(
+                                children: _listFrameTemp.map((item) {
+                                  final index = _listFrameTemp
+                                      .map((e) => e.id)
+                                      .toList()
+                                      .indexOf(item.id);
+                                  final photo = item;
+                                  final imageMedia =
+                                      _projectDetails!.photos[index].media;
+                                  final imageFrame = item;
+                                  final isSelected = index == _indexSelected;
+                                  return Positioned(
+                                    top: imageFrame.y.toDouble(),
+                                    left: imageFrame.x.toDouble(),
+                                    child: Transform.scale(
+                                      scale: imageFrame.scale,
+                                      child: Transform.rotate(
+                                        angle: imageFrame.rotation,
+                                        child: Stack(
+                                          clipBehavior: Clip.none,
+                                          alignment: Alignment.bottomCenter,
+                                          children: [
+                                            Container(
+                                              // decoration: BoxDecoration(
+                                              //   border: Border.all(
+                                              //     color: isSelected
+                                              //         ? Colors.blue
+                                              //         : Colors.transparent,
+                                              //     width: 4.0,
+                                              //   ),
+                                              //   borderRadius:
+                                              //       BorderRadius.circular(12.0),
+                                              // ),
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(8.0),
+                                                child: Stack(
+                                                  children: [
+                                                    imageMedia.contains(
+                                                                "http://") ||
+                                                            imageMedia.contains(
+                                                                "https://")
+                                                        ? Image.network(
+                                                            imageMedia,
+                                                            width: imageFrame
+                                                                .width
+                                                                .toDouble(),
+                                                            height: imageFrame
+                                                                .height
+                                                                .toDouble(),
+                                                            fit: BoxFit.cover,
+                                                          )
+                                                        : Image.file(
+                                                            File(imageMedia),
+                                                            width: imageFrame
+                                                                .width
+                                                                .toDouble(),
+                                                            height: imageFrame
+                                                                .height
+                                                                .toDouble(),
+                                                            fit: BoxFit.cover,
+                                                          )
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      if (isSelected) // Show blue border when selected
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: Colors
-                                                  .blue, // Blue border when selected
-                                              width: 4.0,
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                          ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                    ),
+                    // gesture layer
+                    Positioned.fill(
+                      child: GestureDetector(
+                        onTapDown: (details) {
+                          _onOverlayTap(details);
+                        },
+                        onScaleStart: (details) {
+                          if (_indexSelected != null) {
+                            _onScaleStart(details, _indexSelected!);
+                          } else {
+                            _previousScaleCanvas = _scaleCanvas.toDouble();
+                            setState(() {});
+                          }
+                        },
+                        onScaleUpdate: (details) {
+                          if (_indexSelected != null) {
+                            _onScaleUpdate(details, _indexSelected!);
+                          } else {
+                            _scaleCanvas =
+                                _previousScaleCanvas * details.scale.toDouble();
+                          }
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                    // overlay layer
+                    Stack(
+                      children: [
+                        if (_indexSelected !=
+                            null) // Show blue border when selected
+                          Positioned(
+                            left: _listFrameTemp[_indexSelected!].x.toDouble(),
+                            top: _listFrameTemp[_indexSelected!].y.toDouble(),
+                            child: Transform.scale(
+                              scale: _listFrameTemp[_indexSelected!]
+                                  .scale
+                                  .toDouble(),
+                              child: Transform.rotate(
+                                angle: _listFrameTemp[_indexSelected!]
+                                    .rotation
+                                    .toDouble(),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  alignment: Alignment.topCenter,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: _deleteSelectedImage,
+                                      child: Container(
+                                        width: 30,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          borderRadius:
+                                              BorderRadius.circular(999),
                                         ),
-                                      if (isSelected) // Show delete button only when selected
-                                        Positioned(
-                                          top: -16.0,
-                                          right: -16.0,
-                                          child: GestureDetector(
-                                            onTap: _deleteSelectedImage,
-                                            child: Container(
-                                              width: 32,
-                                              height: 32,
-                                              decoration: BoxDecoration(
-                                                color: Colors.red,
-                                                borderRadius:
-                                                    BorderRadius.circular(16),
-                                              ),
-                                              child: Icon(Icons.close,
-                                                  color: Colors.white),
-                                            ),
-                                          ),
+                                        child: const Icon(Icons.remove,
+                                            color: Colors.white),
+                                      ),
+                                    ),
+                                    Container(
+                                      width: _listFrameTemp[_indexSelected!]
+                                          .width
+                                          .toDouble(),
+                                      height: _listFrameTemp[_indexSelected!]
+                                          .height
+                                          .toDouble(),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors
+                                              .blue, // Blue border when selected
+                                          width: 4.0,
                                         ),
-                                    ],
-                                  ),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              );
-                            }).toList(),
+                              ),
+                            ),
                           ),
-                          //       child: Stack(
-                          //         children: [
-                          //           GestureDetector(
-                          //             onScaleUpdate: (details) {
-                          //               if (isSelected) {
-                          //                 _onScaleUpdate(details, index);
-                          //               }
-                          //             },
-                          //             onScaleStart: (details) {
-                          //               if (isSelected) {
-                          //                 _onScaleStart(details, index);
-                          //               }
-                          //             },
-                          //             onTap: () => _onImageTap(index),
-                          //             child: Transform.rotate(
-                          //               angle: imageFrame.rotation,
-                          //               child: Transform.scale(
-                          //                 scale: _scale,
-                          //                 child: Stack(
-                          //                   clipBehavior: Clip.none,
-                          //                   alignment: Alignment.bottomCenter,
-                          //                   children: [
-                          //                     Container(
-                          //                       decoration: BoxDecoration(
-                          //                         border: Border.all(
-                          //                           color: isSelected
-                          //                               ? Colors.blue
-                          //                               : Colors.transparent,
-                          //                           width: 4.0,
-                          //                         ),
-                          //                         borderRadius:
-                          //                             BorderRadius.circular(
-                          //                                 12.0),
-                          //                       ),
-                          //                       child: ClipRRect(
-                          //                         borderRadius:
-                          //                             BorderRadius.circular(
-                          //                                 8.0),
-                          //                         child: Stack(
-                          //                           children: [
-                          //                             imageMedia.contains(
-                          //                                         "http://") ||
-                          //                                     imageMedia
-                          //                                         .contains(
-                          //                                             "https://")
-                          //                                 ? Image.network(
-                          //                                     imageMedia,
-                          //                                     width: imageFrame
-                          //                                         .width
-                          //                                         .toDouble(),
-                          //                                     height: imageFrame
-                          //                                         .height
-                          //                                         .toDouble(),
-                          //                                     fit: BoxFit.cover,
-                          //                                     // color: Colors.grey.withOpacity(_projectDetails!.photos[index].),
-                          //                                     // color: Colors.grey.withOpacity(_projectDetails!.photos[index].),
-                          //                                     // colorBlendMode: BlendMode.dstATop,
-                          //                                   )
-                          //                                 : Image.file(
-                          //                                     File(imageMedia),
-                          //                                     width: imageFrame
-                          //                                         .width
-                          //                                         .toDouble(),
-                          //                                     height: imageFrame
-                          //                                         .height
-                          //                                         .toDouble(),
-                          //                                     fit: BoxFit.cover,
-                          //                                     // color: Colors.grey
-                          //                                     //     .withOpacity(0 -
-                          //                                     //         1), // Áp dụng độ mờ đục
-                          //                                     // colorBlendMode:
-                          //                                     //     BlendMode
-                          //                                     //         .dstATop, // Chế độ kết hợp màu sắc
-                          //                                   ),
-                          //                           ],
-                          //                         ),
-                          //                       ),
-                          //                     ),
-                          //                     Container(
-                          //                       height: imageFrame.height + 50,
-                          //                       width:
-                          //                           imageFrame.width.toDouble(),
-                          //                       alignment: Alignment.topCenter,
-                          //                       child: (isSelected)
-                          //                           ? GestureDetector(
-                          //                               onTap:
-                          //                                   _deleteSelectedImage,
-                          //                               child: Container(
-                          //                                 width: 30,
-                          //                                 height: 30,
-                          //                                 decoration:
-                          //                                     BoxDecoration(
-                          //                                   color: Colors.red,
-                          //                                   borderRadius:
-                          //                                       BorderRadius
-                          //                                           .circular(
-                          //                                               999),
-                          //                                 ),
-                          //                                 child: const Center(
-                          //                                   child: Icon(
-                          //                                       Icons.remove,
-                          //                                       color: Colors
-                          //                                           .white),
-                          //                                 ),
-                          //                               ),
-                          //                             )
-                          //                           : const SizedBox(),
-                          //                     ),
-                          //                   ],
-                          //                 ),
-                          //               ),
-                          //             ),
-                          //           ),
-                          //         ],
-                          //       ),
-                          //     );
-                          //   }).toList(),
-                          // ),
-                        ),
+                      ],
+                    )
+                  ],
                 ),
               )
             ],
@@ -479,13 +444,12 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   }
 
   void _deleteSelectedImage() {
-    if (_selectedImageIndex != null) {
+    if (_indexSelected != null) {
       setState(() {
-        _projectDetails!.photos.removeAt(_selectedImageIndex!);
-        _listFrameTemp.removeAt(_selectedImageIndex!);
-        _selectedImageIndex = null;
-      }
-      );
+        _projectDetails!.photos.removeAt(_indexSelected!).toString();
+        _listFrameTemp.removeAt(_indexSelected!).toString();
+        _indexSelected = null;
+      });
     }
   }
 
@@ -499,7 +463,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       _listFrameTemp[index].rotation,
       _listFrameTemp[index].scale,
     );
-    _previousRotation = _listFrameTemp[index].rotation;
+    _previousRotation = _listFrameTemp[index].rotation.toDouble();
     setState(() {});
   }
 
@@ -520,12 +484,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     }
 
     setState(() {});
-  }
-
-  void _onImageTap(int index) {
-    setState(() {
-      _selectedImageIndex = index;
-    });
   }
 
   void _onBack() {
@@ -577,41 +535,40 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       }
     });
   }
+
+  void _onOverlayTap(TapDownDetails details) {
+    int indexSelected = -1;
+    Offset globalPos = details.globalPosition;
+    for (var i = 0; i < _listFrameTemp.length.toDouble(); i++) {
+      var item = _listFrameTemp[i];
+      Offset startOffset = Offset(item.x.toDouble(), item.y.toDouble());
+      Offset endOffset =
+          startOffset.translate(item.width.toDouble(), item.height.toDouble());
+      if (FlutterOffsetHelpers().containOffset(
+          globalPos, Offset(item.x.toDouble(), item.y.toDouble()), endOffset)) {
+        indexSelected = i;
+      }
+    }
+    if (indexSelected != -1) {
+      if (_indexSelected != indexSelected) {
+        setState(() {
+          _indexSelected = indexSelected;
+        });
+      }
+    } else {
+      if (_indexSelected != null) {
+        setState(() {
+          _indexSelected = null;
+        });
+      }
+    }
+  }
 }
 
-
-
-// void _showSelectionOverlay() {
-//   OverlayState? overlayState = Overlay.of(context);
-//   _overlayEntry = OverlayEntry(
-//     builder: (context) => Positioned(
-//       top: 0,
-//       left: 0,
-//       right: 0,
-//       bottom: 0,
-//       child: IgnorePointer(
-//         child: Container(
-//           color: Colors.transparent,
-//           child: Stack(
-//             children: _listFrameTemp.asMap().entries.map((entry) {
-//               final int index = entry.key;
-//               final FrameTemp frameTemp = entry.value;
-//               final bool isSelected = index == _selectedImageIndex;
-//               return isSelected
-//                   ? Container(
-//                       decoration: BoxDecoration(
-//                         border: Border.all(
-//                           color: Colors.blue,
-//                           width: 4.0,
-//                         ),
-//                       ),
-//                     )
-//                   : SizedBox.shrink();
-//             }).toList(),
-//           ),
-//         ),
-//       ),
-//     ),
-//   );
-//   overlayState?.insert(_overlayEntry!);
-// }
+class FlutterOffsetHelpers {
+  bool containOffset(Offset checkOffset, Offset startOffset, Offset endOffset) {
+    return (startOffset.dx <= checkOffset.dx &&
+            checkOffset.dx <= endOffset.dx) &&
+        (startOffset.dy <= checkOffset.dy && checkOffset.dy <= endOffset.dy);
+  }
+}
