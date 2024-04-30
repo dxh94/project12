@@ -396,22 +396,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   }
 
   void _downloadImage() {}
-// custom slider 
-  Widget _buildImageWithBlurSlider() {
-    return Stack(
-      children: [
-        Opacity(
-          opacity: 1.0 - _blurValue,
-          child: Image.network(
-            'https://via.placeholder.com/300',
-            width: 300,
-            height: 300,
-            fit: BoxFit.cover,
-          ),
-        ),
-      ],
-    );
-  }
   
   Widget _buildCustomSlider() {
     final gradient = LinearGradient(
