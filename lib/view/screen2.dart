@@ -393,7 +393,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   }
 
   void _downloadImage() {}
-
+// custom slider 
   Widget _buildImageWithBlurSlider() {
     return Stack(
       children: [
@@ -409,7 +409,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       ],
     );
   }
-
+  
   Widget _buildCustomSlider() {
     final gradient = LinearGradient(
       colors: [Colors.blue, Colors.pink],
