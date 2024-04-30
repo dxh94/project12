@@ -243,6 +243,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                                             height: imageFrame
                                                                 .height
                                                                 .toDouble(),
+                                                                  opacity: _indexSelected == index ?  AlwaysStoppedAnimation(_blurValue):null,
+                                                                
+                                                                  
                                                             fit: BoxFit.cover,
                                                           )
                                                         : Image.file(
@@ -253,6 +256,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                                             height: imageFrame
                                                                 .height
                                                                 .toDouble(),
+                                                                  opacity: _indexSelected == index ?  AlwaysStoppedAnimation(_blurValue):null,
                                                             fit: BoxFit.cover,
                                                           )
                                                   ],
@@ -278,7 +282,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                           if (_indexSelected != null) {
                             _onScaleStart(details, _indexSelected!);
                           } else {
-                            _previousScaleCanvas = _scaleCanvas.toDouble();
+                            _previousScaleCanvas = _scaleCanvas.toDouble();                            
                             setState(() {});
                           }
                         },
@@ -319,7 +323,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                         width: 30,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          color: Colors.red,
+                                          color: Colors.red,                                          
                                           borderRadius:
                                               BorderRadius.circular(999),
                                         ),
@@ -336,8 +340,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                           .toDouble(),
                                       decoration: BoxDecoration(
                                         border: Border.all(
-                                          color: Colors
-                                              .blue, // Blue border when selected
+                                          color: Colors.blue,
                                           width: 4.0,
                                         ),
                                         borderRadius:
