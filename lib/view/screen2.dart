@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'dart:io';
+import 'dart:math';
+import 'package:flutter/rendering.dart';
 import 'package:project12/helpers/convert.dart';
 
 import 'package:project12/helpers/random_number.dart';
@@ -44,7 +46,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   Frame? _currentFrame;
   File? selectedImage;
   double _blurValue = 0.0;
-  bool _isExported = false;
+  bool _isExported = false, _isGestureInsideImageFrame = false;
   OverlayEntry? _overlayEntry;
 
   @override
@@ -109,6 +111,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
               bottom: MediaQuery.of(context).padding.bottom),
           child: Column(
             children: [
+              // tittle
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -243,9 +246,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                                             height: imageFrame
                                                                 .height
                                                                 .toDouble(),
-                                                                  opacity: _indexSelected == index ?  AlwaysStoppedAnimation(_blurValue):null,
-                                                                
-                                                                  
+                                                            opacity: _indexSelected ==
+                                                                    index
+                                                                ? AlwaysStoppedAnimation(
+                                                                    _blurValue)
+                                                                : null,
                                                             fit: BoxFit.cover,
                                                           )
                                                         : Image.file(
@@ -256,7 +261,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                                             height: imageFrame
                                                                 .height
                                                                 .toDouble(),
-                                                                  opacity: _indexSelected == index ?  AlwaysStoppedAnimation(_blurValue):null,
+                                                            opacity: _indexSelected ==
+                                                                    index
+                                                                ? AlwaysStoppedAnimation(
+                                                                    _blurValue)
+                                                                : null,
                                                             fit: BoxFit.cover,
                                                           )
                                                   ],
@@ -280,80 +289,143 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         },
                         onScaleStart: (details) {
                           if (_indexSelected != null) {
-                            _onScaleStart(details, _indexSelected!);
+                            // chỉ cho phép scale khi thao tác bên trong khung ảnh
+                            Offset startOffset = Offset(
+                                _listFrameTemp[_indexSelected!].x,
+                                _listFrameTemp[_indexSelected!].y);
+                            Offset endOffset = startOffset.translate(
+                                _listFrameTemp[_indexSelected!].width,
+                                _listFrameTemp[_indexSelected!].height);
+                            Offset checkOffset = details.focalPoint;
+                            // print("111 : ${checkOffset}");
+
+                            if (FlutterOffsetHelpers().containOffset(
+                                checkOffset, startOffset, endOffset)) {
+                              _isGestureInsideImageFrame = true;
+                              _onScaleStart(details, _indexSelected!);
+                            }
                           } else {
-                            _previousScaleCanvas = _scaleCanvas.toDouble();                            
+                            _previousScaleCanvas = _scaleCanvas.toDouble();
                             setState(() {});
                           }
                         },
                         onScaleUpdate: (details) {
                           if (_indexSelected != null) {
-                            _onScaleUpdate(details, _indexSelected!);
+                            if (_isGestureInsideImageFrame) {
+                              _onScaleUpdate(details, _indexSelected!);
+                            }
                           } else {
                             _scaleCanvas =
                                 _previousScaleCanvas * details.scale.toDouble();
                           }
                           setState(() {});
                         },
+                        onScaleEnd: (details) {
+                          setState(() {
+                            _isGestureInsideImageFrame = false;
+                          });
+                        },
                       ),
                     ),
                     // overlay layer
-                    Stack(
-                      children: [
-                        if (_indexSelected !=
-                            null) // Show blue border when selected
-                          Positioned(
-                            left: _listFrameTemp[_indexSelected!].x.toDouble(),
-                            top: _listFrameTemp[_indexSelected!].y.toDouble(),
-                            child: Transform.scale(
-                              scale: _listFrameTemp[_indexSelected!]
-                                  .scale
-                                  .toDouble(),
-                              child: Transform.rotate(
-                                angle: _listFrameTemp[_indexSelected!]
-                                    .rotation
+                    IgnorePointer(
+                      child: Stack(
+                        children: [
+                          if (_indexSelected !=
+                              null) // Show blue border when selected
+                            Positioned(
+                              left:
+                                  _listFrameTemp[_indexSelected!].x.toDouble(),
+                              top: _listFrameTemp[_indexSelected!].y.toDouble(),
+                              child: Transform.scale(
+                                scale: _listFrameTemp[_indexSelected!]
+                                    .scale
                                     .toDouble(),
-                                child: Stack(
-                                  clipBehavior: Clip.none,
-                                  alignment: Alignment.topCenter,
-                                  children: [
-                                    GestureDetector(
-                                      onTap: _deleteSelectedImage,
-                                      child: Container(
-                                        width: 30,
-                                        height: 30,
+                                child: Transform.rotate(
+                                  angle: _listFrameTemp[_indexSelected!]
+                                      .rotation
+                                      .toDouble(),
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    alignment: Alignment.topCenter,
+                                    children: [
+                                      Positioned(
+                                        top: -30,
+                                        child: GestureDetector(
+                                          onTap: _deleteSelectedImage,
+                                          child: Container(
+                                            width: 30,
+                                            height: 30,
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(999),
+                                            ),
+                                            child: const Icon(
+                                              Icons.remove,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        width: _listFrameTemp[_indexSelected!]
+                                            .width
+                                            .toDouble(),
+                                        height: _listFrameTemp[_indexSelected!]
+                                            .height
+                                            .toDouble(),
                                         decoration: BoxDecoration(
-                                          color: Colors.red,                                          
+                                          border: Border.all(
+                                            color: Colors.blue,
+                                            width: 4.0,
+                                          ),
                                           borderRadius:
-                                              BorderRadius.circular(999),
+                                              BorderRadius.circular(12.0),
                                         ),
-                                        child: const Icon(Icons.remove,
-                                            color: Colors.white),
                                       ),
-                                    ),
-                                    Container(
-                                      width: _listFrameTemp[_indexSelected!]
-                                          .width
-                                          .toDouble(),
-                                      height: _listFrameTemp[_indexSelected!]
-                                          .height
-                                          .toDouble(),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.blue,
-                                          width: 4.0,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(12.0),
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                      ],
-                    )
+                        ],
+                      ),
+                    ),
+                    // Positioned(
+                    //   left: _listFrameTemp[_indexSelected!].x.toDouble() +
+                    //       _listFrameTemp[_indexSelected!].width / 2 +
+                    //       _listFrameTemp[_indexSelected!].height /
+                    //           2 *
+                    //           sin(_listFrameTemp[_indexSelected!].rotation),
+                    //   top: _listFrameTemp[_indexSelected!].y.toDouble() -
+                    //       30 +
+                    //       _listFrameTemp[_indexSelected!].height /
+                    //           2 *
+                    //           (1 -
+                    //               cos(_listFrameTemp[_indexSelected!]
+                    //                   .rotation)),
+                    //   child: GestureDetector(
+                    //     onTap: _deleteSelectedImage,
+                    //     child: Transform.rotate(
+                    //       angle: _listFrameTemp[_indexSelected!]
+                    //           .rotation
+                    //           .toDouble(),
+                    //       child: Container(
+                    //         width: 30,
+                    //         height: 30,
+                    //         decoration: BoxDecoration(
+                    //           color: Colors.red,
+                    //           borderRadius: BorderRadius.circular(999),
+                    //         ),
+                    //         child: const Icon(
+                    //           Icons.remove,
+                    //           color: Colors.white,
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               )
@@ -396,9 +468,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   }
 
   void _downloadImage() {}
-  
+
   Widget _buildCustomSlider() {
-    final gradient = LinearGradient(
+    const gradient = LinearGradient(
       colors: [Colors.blue, Colors.pink],
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
@@ -432,6 +504,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
 
   void _deleteSelectedImage() {
     if (_indexSelected != null) {
+      print("_deleteSelectedImage call");
       setState(() {
         _projectDetails!.photos.removeAt(_indexSelected!).toString();
         _listFrameTemp.removeAt(_indexSelected!).toString();
