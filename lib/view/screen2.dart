@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'dart:io';
 import 'dart:math';
@@ -189,6 +190,12 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
               Expanded(
                 child: Stack(
                   children: [
+                    // canvas layer
+                    Container(
+                      color: Colors.pink, // Màu hồng
+                      width: 450, // Đặt chiều rộng của vùng canvas
+                      height: 550, // Đặt chiều cao của vùng canvas
+                    ),
                     // images + canvas
                     Container(
                       child: (_projectDetails == null)
@@ -219,16 +226,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                           alignment: Alignment.bottomCenter,
                                           children: [
                                             Container(
-                                              // decoration: BoxDecoration(
-                                              //   border: Border.all(
-                                              //     color: isSelected
-                                              //         ? Colors.blue
-                                              //         : Colors.transparent,
-                                              //     width: 4.0,
-                                              //   ),
-                                              //   borderRadius:
-                                              //       BorderRadius.circular(12.0),
-                                              // ),
                                               child: ClipRRect(
                                                 borderRadius:
                                                     BorderRadius.circular(8.0),
@@ -289,7 +286,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         },
                         onScaleStart: (details) {
                           if (_indexSelected != null) {
-                            // chỉ cho phép scale khi thao tác bên trong khung ảnh
                             Offset startOffset = Offset(
                                 _listFrameTemp[_indexSelected!].x,
                                 _listFrameTemp[_indexSelected!].y);
@@ -297,7 +293,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                 _listFrameTemp[_indexSelected!].width,
                                 _listFrameTemp[_indexSelected!].height);
                             Offset checkOffset = details.focalPoint;
-                            // print("111 : ${checkOffset}");
 
                             if (FlutterOffsetHelpers().containOffset(
                                 checkOffset, startOffset, endOffset)) {
@@ -504,10 +499,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
 
   void _deleteSelectedImage() {
     if (_indexSelected != null) {
-      print("_deleteSelectedImage call");
       setState(() {
-        _projectDetails!.photos.removeAt(_indexSelected!).toString();
-        _listFrameTemp.removeAt(_indexSelected!).toString();
+        _projectDetails!.photos.removeAt(_indexSelected!);
+        _listFrameTemp.removeAt(_indexSelected!);
         _indexSelected = null;
       });
     }
