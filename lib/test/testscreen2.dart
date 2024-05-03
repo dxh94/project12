@@ -34,7 +34,8 @@ class _TestScreen2State extends State<TestScreen2> {
   List<FrameTemp> _listFrameTemp = [];
   double _scaleCanvas = 1.0, _previousScaleCanvas = 1.0;
   double _previousRotation = 0.0;
-  int? _indexSelected;
+  // int? _indexSelected;
+  FrameTemp? _selectFrameTemp;
   Frame? _currentFrame;
   File? selectedImage;
   bool _isExported = false, _isGestureInsideImageFrame = false;
@@ -88,13 +89,13 @@ class _TestScreen2State extends State<TestScreen2> {
   }
 
   void _deleteSelectedImage() {
-    if (_indexSelected != null) {
+    if (_selectFrameTemp != null) {
       print("_deleteSelectedImage call");
-      setState(() {
-        _projectDetails!.photos.removeAt(_indexSelected!).toString();
-        _listFrameTemp.removeAt(_indexSelected!).toString();
-        _indexSelected = null;
-      });
+      // setState(() {
+      //   _projectDetails!.photos.removeAt(_indexSelected!).toString();
+      //   _listFrameTemp.removeAt(_indexSelected!).toString();
+      //   _indexSelected = null;
+      // });
     }
   }
 
@@ -132,73 +133,77 @@ class _TestScreen2State extends State<TestScreen2> {
   }
 
   void _onBack() {
-    ProjectModel newProjectModel;
-    List<Photos> listPhoto = [];
-    for (int i = 0; i < _listFrameTemp.length; i++) {
-      listPhoto.add(Photos(
-          _projectDetails!.photos[i].id, _projectDetails!.photos[i].media,
-          frame: _listFrameTemp[i].convertFrameTempToFrameModel()));
-    }
-    newProjectModel = ProjectModel(
-        _projectDetails!.id, randomDouble(), _projectDetails!.name, true,
-        photos: listPhoto);
-    for (int i = 0; i < widget.projects.length; i++) {
-      if (newProjectModel.id == widget.projects[i].id) {
-        widget.projects[i] = newProjectModel;
-        widget.projects[i].isCheckProject = true;
-        ProjectRealm()
-            .updateProject(widget.projectRealm.realm, widget.projects[i]);
-      }
-    }
+    // ProjectModel newProjectModel;
+    // List<Photos> listPhoto = [];
+    // for (int i = 0; i < _listFrameTemp.length; i++) {
+    //   listPhoto.add(Photos(
+    //       _projectDetails!.photos[i].id, _projectDetails!.photos[i].media,
+    //       frame: _listFrameTemp[i].convertFrameTempToFrameModel()));
+    // }
+    // newProjectModel = ProjectModel(
+    //     _projectDetails!.id, randomDouble(), _projectDetails!.name, true,
+    //     photos: listPhoto);
+    // for (int i = 0; i < widget.projects.length; i++) {
+    //   if (newProjectModel.id == widget.projects[i].id) {
+    //     widget.projects[i] = newProjectModel;
+    //     widget.projects[i].isCheckProject = true;
+    //     ProjectRealm()
+    //         .updateProject(widget.projectRealm.realm, widget.projects[i]);
+    //   }
+    // }
     Navigator.of(context).pop();
   }
 
   void _onOverlayTap(TapDownDetails details) {
     int indexSelected = -1;
     Offset localPos = details.localPosition;
-    print("_onOverlayTap localPos ${localPos}");
+    print("_onOverlayTap local: ${localPos}");
     for (var i = 0; i < _listFrameTemp.length; i++) {
       var item = _listFrameTemp[i];
       Offset startOffset = Offset(item.x.toDouble(), item.y.toDouble());
       Offset endOffset =
           startOffset.translate(item.width.toDouble(), item.height.toDouble());
+      print("_onOverlayTap i ${i}: ${startOffset} - ${endOffset}");
 
-      print("_onOverlayTap i: ${i}: ${startOffset} + ${endOffset}");
       if (FlutterOffsetHelpers()
           .containOffset(localPos, startOffset, endOffset)) {
         indexSelected = i;
       }
     }
     if (indexSelected != -1) {
-      if (_indexSelected != indexSelected) {
+      if (_selectFrameTemp?.id != _listFrameTemp[indexSelected].id) {
         setState(() {
-          _indexSelected = indexSelected;
+          _selectFrameTemp = _listFrameTemp[indexSelected];
         });
       }
     } else {
-      if (_indexSelected != null) {
+      if (_selectFrameTemp != null) {
         setState(() {
-          _indexSelected = null;
+          _selectFrameTemp = null;
         });
       }
     }
   }
 
   void _onGestureScaleStart(ScaleStartDetails details) {
-    if (_indexSelected != null) {
+    if (_selectFrameTemp != null) {
       // chỉ cho phép scale khi thao tác bên trong khung ảnh
-      Offset startOffset = Offset(
-          _listFrameTemp[_indexSelected!].x, _listFrameTemp[_indexSelected!].y);
+      Offset startOffset = Offset(_selectFrameTemp!.x, _selectFrameTemp!.y);
       Offset endOffset = startOffset.translate(
-          _listFrameTemp[_indexSelected!].width,
-          _listFrameTemp[_indexSelected!].height);
+          _selectFrameTemp!.width, _selectFrameTemp!.height);
       Offset checkOffset = details.focalPoint;
       // print("111 : ${checkOffset}");
 
       if (FlutterOffsetHelpers()
           .containOffset(checkOffset, startOffset, endOffset)) {
         _isGestureInsideImageFrame = true;
-        _onScaleStart(details, _indexSelected!);
+        int index = _listFrameTemp
+            .map(
+              (e) => e.id,
+            )
+            .toList()
+            .indexOf(_selectFrameTemp!.id);
+        _onScaleStart(details, index);
       }
     } else {
       _previousScaleCanvas = _scaleCanvas.toDouble();
@@ -207,9 +212,16 @@ class _TestScreen2State extends State<TestScreen2> {
   }
 
   void _onGestureScaleUpdate(ScaleUpdateDetails details) {
-    if (_indexSelected != null) {
+    if (_selectFrameTemp != null) {
       if (_isGestureInsideImageFrame) {
-        _onScaleUpdate(details, _indexSelected!);
+        int index = _listFrameTemp
+            .map(
+              (e) => e.id,
+            )
+            .toList()
+            .indexOf(_selectFrameTemp!.id);
+
+        _onScaleUpdate(details, index);
       }
     } else {
       _scaleCanvas = _previousScaleCanvas * details.scale.toDouble();
@@ -259,6 +271,13 @@ class _TestScreen2State extends State<TestScreen2> {
   }
 
   Widget _buildImageCanvas() {
+    List<FrameTemp> mainListFrameTemp = List.from(_listFrameTemp);
+    // if (_selectFrameTemp != null) {
+    //   mainListFrameTemp = mainListFrameTemp
+    //       .where((element) => element.id != _selectFrameTemp!.id)
+    //       .toList();
+    //   mainListFrameTemp.insert(0, _selectFrameTemp!);
+    // }
     return Container(
       child: (_projectDetails == null)
           ? const Center(child: CircularProgressIndicator())
@@ -266,7 +285,7 @@ class _TestScreen2State extends State<TestScreen2> {
               //scale canvas
               scale: _scaleCanvas,
               child: Stack(
-                children: _listFrameTemp.map(
+                children: mainListFrameTemp.map(
                   (item) {
                     final index = _listFrameTemp
                         .map((e) => e.id)
@@ -280,9 +299,9 @@ class _TestScreen2State extends State<TestScreen2> {
                       top: imageFrame.y.toDouble(),
                       left: imageFrame.x.toDouble(),
                       child: Transform.scale(
-                        scale: 1, // imageFrame.scale,
+                        scale: imageFrame.scale,
                         child: Transform.rotate(
-                          angle: 0, //imageFrame.rotation,
+                          angle: imageFrame.rotation,
                           child: Stack(
                             clipBehavior: Clip.none,
                             alignment: Alignment.bottomCenter,
@@ -336,6 +355,7 @@ class _TestScreen2State extends State<TestScreen2> {
     return Positioned.fill(
       child: GestureDetector(
         onTapDown: (details) {
+          print("ao game a");
           _onOverlayTap(details);
         },
         onScaleStart: (details) {
@@ -355,15 +375,20 @@ class _TestScreen2State extends State<TestScreen2> {
     return IgnorePointer(
       child: Stack(
         children: [
-          if (_indexSelected != null) // Show blue border when selected
+          if (_selectFrameTemp != null) // Show blue border when selected
             Positioned(
-              left: _listFrameTemp[_indexSelected!].x.toDouble(),
-              top: _listFrameTemp[_indexSelected!].y.toDouble(),
+              left: _selectFrameTemp!.x.toDouble() -
+                  (_selectFrameTemp!.width /
+                      2 *
+                      (_scaleCanvas - 1)), // * ( _scaleCanvas),
+              top: _selectFrameTemp!.y.toDouble() -
+                  (_selectFrameTemp!.height /
+                      2 *
+                      (_scaleCanvas - 1)), // * ( _scaleCanvas),
               child: Transform.scale(
-                scale: 1, //_listFrameTemp[_indexSelected!].scale.toDouble(),
+                scale: _selectFrameTemp!.scale.toDouble(),
                 child: Transform.rotate(
-                  angle:
-                      0, // _listFrameTemp[_indexSelected!].rotation.toDouble(),
+                  angle: _selectFrameTemp!.rotation.toDouble(),
                   child: Stack(
                     clipBehavior: Clip.none,
                     alignment: Alignment.topCenter,
@@ -387,12 +412,10 @@ class _TestScreen2State extends State<TestScreen2> {
                         ),
                       ),
                       Container(
-                        width:
-                            _listFrameTemp[_indexSelected!].width.toDouble() *
-                                _scaleCanvas,
-                        height:
-                            _listFrameTemp[_indexSelected!].height.toDouble() *
-                                _scaleCanvas,
+                        width: (_selectFrameTemp?.width.toDouble() ?? 0) *
+                            _scaleCanvas,
+                        height: (_selectFrameTemp?.height.toDouble() ?? 0) *
+                            _scaleCanvas,
                         decoration: BoxDecoration(
                           border: Border.all(
                             color: Colors.blue,
@@ -490,20 +513,16 @@ class _TestScreen2State extends State<TestScreen2> {
 
   Widget _buildRedIcon() {
     return Positioned(
-      left: _listFrameTemp[_indexSelected!].x.toDouble() +
-          _listFrameTemp[_indexSelected!].width / 2 +
-          _listFrameTemp[_indexSelected!].height /
-              2 *
-              sin(_listFrameTemp[_indexSelected!].rotation),
-      top: _listFrameTemp[_indexSelected!].y.toDouble() -
-          30 +
-          _listFrameTemp[_indexSelected!].height /
-              2 *
-              (1 - cos(_listFrameTemp[_indexSelected!].rotation)),
+      // left: _selectFrameTemp?.x.toDouble() +
+      //     _selectFrameTemp?.width / 2 +
+      //     _selectFrameTemp?.height / 2 * sin(_selectFrameTemp?.rotation),
+      // top: _selectFrameTemp?.y.toDouble() -
+      //     30 +
+      //     _selectFrameTemp?.height / 2 * (1 - cos(_selectFrameTemp?.rotation),),
       child: GestureDetector(
         onTap: _deleteSelectedImage,
         child: Transform.rotate(
-          angle: _listFrameTemp[_indexSelected!].rotation.toDouble(),
+          angle: 0, // _selectFrameTemp?.rotation.toDouble(),
           child: Container(
             width: 30,
             height: 30,
