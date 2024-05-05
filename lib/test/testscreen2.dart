@@ -53,6 +53,7 @@ class _TestScreen2State extends State<TestScreen2> {
               photos: widget.projects[i].photos);
         }
       }
+      print(Random().nextInt(100));
       if (a != null) {
         _projectDetails = a;
         for (var item in _projectDetails!.photos) {
@@ -185,7 +186,35 @@ class _TestScreen2State extends State<TestScreen2> {
     }
   }
 
-  void _onGestureScaleStart(ScaleStartDetails details) {
+  void _onInteractionStart(ScaleStartDetails details) {
+    int indexSelected = -1;
+    Offset localPos = details.localFocalPoint;
+    print("_onOverlayTap local: ${localPos}");
+    for (var i = 0; i < _listFrameTemp.length; i++) {
+      var item = _listFrameTemp[i];
+      Offset startOffset = Offset(item.x.toDouble(), item.y.toDouble());
+      Offset endOffset =
+          startOffset.translate(item.width.toDouble(), item.height.toDouble());
+      print("_onOverlayTap i ${i}: ${startOffset} - ${endOffset}");
+
+      if (FlutterOffsetHelpers()
+          .containOffset(localPos, startOffset, endOffset)) {
+        indexSelected = i;
+      }
+    }
+    if (indexSelected != -1) {
+      if (_selectFrameTemp?.id != _listFrameTemp[indexSelected].id) {
+        setState(() {
+          _selectFrameTemp = _listFrameTemp[indexSelected];
+        });
+      }
+    } else {
+      if (_selectFrameTemp != null) {
+        setState(() {
+          _selectFrameTemp = null;
+        });
+      }
+    }
     if (_selectFrameTemp != null) {
       // chỉ cho phép scale khi thao tác bên trong khung ảnh
       Offset startOffset = Offset(_selectFrameTemp!.x, _selectFrameTemp!.y);
@@ -211,7 +240,7 @@ class _TestScreen2State extends State<TestScreen2> {
     }
   }
 
-  void _onGestureScaleUpdate(ScaleUpdateDetails details) {
+  void _onInteractionUpdate(ScaleUpdateDetails details) {
     if (_selectFrameTemp != null) {
       if (_isGestureInsideImageFrame) {
         int index = _listFrameTemp
@@ -229,7 +258,7 @@ class _TestScreen2State extends State<TestScreen2> {
     setState(() {});
   }
 
-  void _onGestureScaleEnd(ScaleEndDetails details) {
+  void _onInteractionEnd(ScaleEndDetails details) {
     setState(() {
       _isGestureInsideImageFrame = false;
     });
@@ -252,15 +281,33 @@ class _TestScreen2State extends State<TestScreen2> {
               // tittle
               _buildTitle(),
               Expanded(
-                child: Stack(
-                  children: [
-                    // images + canvas
-                    _buildImageCanvas(),
-                    // gesture layer
-                    _buildGestureLayer(),
-                    // overlay layer
-                    _buildOverlayLayer(),
-                  ],
+                child: InteractiveViewer(
+                  // transformationController:
+                  // _indexCurrentSegment == 0 && _isSaveScreen
+                  //     ? _transformationController
+                  //     : null,
+                  panEnabled: !_isGestureInsideImageFrame,
+                  scaleEnabled: !_isGestureInsideImageFrame,
+                  boundaryMargin: const EdgeInsets.symmetric(
+                    vertical: double.infinity,
+                    horizontal: double.infinity,
+                  ),
+                  maxScale: 4,
+                  minScale: 0.4,
+                  trackpadScrollCausesScale: true,
+                  onInteractionStart: _onInteractionStart,
+                  onInteractionUpdate: _onInteractionUpdate,
+                  onInteractionEnd: _onInteractionEnd,
+                  child: Stack(
+                    children: [
+                      // images + canvas
+                      _buildImageCanvas(),
+                      // gesture layer
+                      // _buildGestureLayer(),
+                      // overlay layer
+                      _buildOverlayLayer(),
+                    ],
+                  ),
                 ),
               )
             ],
@@ -272,19 +319,15 @@ class _TestScreen2State extends State<TestScreen2> {
 
   Widget _buildImageCanvas() {
     List<FrameTemp> mainListFrameTemp = List.from(_listFrameTemp);
-    // if (_selectFrameTemp != null) {
-    //   mainListFrameTemp = mainListFrameTemp
-    //       .where((element) => element.id != _selectFrameTemp!.id)
-    //       .toList();
-    //   mainListFrameTemp.insert(0, _selectFrameTemp!);
-    // }
     return Container(
+      color: Colors.pink,
       child: (_projectDetails == null)
           ? const Center(child: CircularProgressIndicator())
           : Transform.scale(
               //scale canvas
               scale: _scaleCanvas,
-              child: Stack(
+              child: Stack(                                                
+                clipBehavior: Clip.none,                  
                 children: mainListFrameTemp.map(
                   (item) {
                     final index = _listFrameTemp
@@ -351,85 +394,61 @@ class _TestScreen2State extends State<TestScreen2> {
     );
   }
 
-  Widget _buildGestureLayer() {
-    return Positioned.fill(
-      child: GestureDetector(
-        onTapDown: (details) {
-          print("ao game a");
-          _onOverlayTap(details);
-        },
-        onScaleStart: (details) {
-          _onGestureScaleStart(details);
-        },
-        onScaleUpdate: (details) {
-          _onGestureScaleUpdate(details);
-        },
-        onScaleEnd: (details) {
-          _onGestureScaleEnd(details);
-        },
-      ),
-    );
-  }
-
   Widget _buildOverlayLayer() {
     return IgnorePointer(
-      child: Stack(
-        children: [
-          if (_selectFrameTemp != null) // Show blue border when selected
-            Positioned(
-              left: _selectFrameTemp!.x.toDouble() -
-                  (_selectFrameTemp!.width /
-                      2 *
-                      (_scaleCanvas - 1)), // * ( _scaleCanvas),
-              top: _selectFrameTemp!.y.toDouble() -
-                  (_selectFrameTemp!.height /
-                      2 *
-                      (_scaleCanvas - 1)), // * ( _scaleCanvas),
-              child: Transform.scale(
-                scale: _selectFrameTemp!.scale.toDouble(),
-                child: Transform.rotate(
-                  angle: _selectFrameTemp!.rotation.toDouble(),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.topCenter,
-                    children: [
-                      Positioned(
-                        // top: -30,
-                        child: GestureDetector(
-                          onTap: _deleteSelectedImage,
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: const Icon(
-                              Icons.remove,
-                              color: Colors.white,
+      child: Transform.scale(
+        scale: _scaleCanvas,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            if (_selectFrameTemp != null) // Show blue border when selected
+              Positioned(
+                left: _selectFrameTemp!.x.toDouble(), // * ( _scaleCanvas),
+                top: _selectFrameTemp!.y.toDouble(), // * ( _scaleCanvas),
+                child: Transform.scale(
+                  scale: _selectFrameTemp!.scale.toDouble(),
+                  child: Transform.rotate(
+                    angle: _selectFrameTemp!.rotation.toDouble(),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.topCenter,
+                      children: [
+                        Positioned(
+                          // top: -30,
+                          child: GestureDetector(
+                            onTap: _deleteSelectedImage,
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: const Icon(
+                                Icons.remove,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Container(
-                        width: (_selectFrameTemp?.width.toDouble() ?? 0) *
-                            _scaleCanvas,
-                        height: (_selectFrameTemp?.height.toDouble() ?? 0) *
-                            _scaleCanvas,
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.blue,
-                            width: 4.0,
+                        Container(
+                          width: (_selectFrameTemp?.width.toDouble() ?? 0),
+                          height: (_selectFrameTemp?.height.toDouble() ?? 0),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.blue,
+                              width: 4.0,
+                            ),
+                            borderRadius: BorderRadius.circular(12.0),
                           ),
-                          borderRadius: BorderRadius.circular(12.0),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
