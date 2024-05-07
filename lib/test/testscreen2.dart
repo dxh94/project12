@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter/widgets.dart';
 import 'package:project12/helpers/convert.dart';
 import 'package:project12/helpers/random_number.dart';
 import 'package:project12/model/sub_models/frame_model.dart';
@@ -32,18 +33,26 @@ class TestScreen2 extends StatefulWidget {
 class _TestScreen2State extends State<TestScreen2> {
   ProjectModel? _projectDetails;
   List<FrameTemp> _listFrameTemp = [];
+  List<GlobalKey> keys = [];
+  GlobalKey canvasKey = GlobalKey();
   double _scaleCanvas = 1.0, _previousScaleCanvas = 1.0;
   double _previousRotation = 0.0;
   // int? _indexSelected;
   FrameTemp? _selectFrameTemp;
   Frame? _currentFrame;
+  List<Frame> _currentListFrame = [];
   File? selectedImage;
   bool _isExported = false, _isGestureInsideImageFrame = false;
-  Offset? _globalTouchPoint;
-  GlobalKey? _selectedFrameKey;
+  int indexSelected = -1;
+
   @override
   void initState() {
     super.initState();
+
+    keys = widget.projects.map((e) {
+      return GlobalKey();
+    }).toList();
+
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       ProjectModel? a;
       for (int i = 0; i < widget.projects.length; i++) {
@@ -116,7 +125,7 @@ class _TestScreen2State extends State<TestScreen2> {
   }
 
   void _onScaleUpdate(ScaleUpdateDetails details, int index) {
-    if (details.pointerCount == 1) {
+    if (details.pointerCount == 1) { 
       _listFrameTemp[index].x =
           _listFrameTemp[index].x + details.focalPointDelta.dx;
       _listFrameTemp[index].y =
@@ -156,54 +165,26 @@ class _TestScreen2State extends State<TestScreen2> {
     Navigator.of(context).pop();
   }
 
-  // void _onOverlayTap(TapDownDetails details) {
-  //   int indexSelected = -1;
-  //   Offset localPos = details.localPosition;
-  //   print("_onOverlayTap local: ${localPos}");
-  //   for (var i = 0; i < _listFrameTemp.length; i++) {
-  //     var item = _listFrameTemp[i];
-  //     Offset startOffset = Offset(item.x.toDouble(), item.y.toDouble());
-  //     Offset endOffset = startOffset.translate(item.width.toDouble(), item.height.toDouble());
-  //     print("_onOverlayTap i ${i}: ${startOffset} - ${endOffset}");
-  //     if (FlutterOffsetHelpers()
-  //         .containOffset(localPos, startOffset, endOffset)) {
-  //       indexSelected = i;
-  //     }
-  //   }
-  //   if (indexSelected != -1) {
-  //     if (_selectFrameTemp?.id != _listFrameTemp[indexSelected].id) {
-  //       setState(() {
-  //         _selectFrameTemp = _listFrameTemp[indexSelected];
-  //       });
-  //     }
-  //   } else {
-  //     if (_selectFrameTemp != null) {
-  //       setState(() {
-  //         _selectFrameTemp = null;
-  //       });
-  //     }
-  //   }
-  // }
 
   void _onInteractionStart(ScaleStartDetails details) {
-    int indexSelected = -1;
-    Offset localPos = details.localFocalPoint;
-    // setState(() {
-    //   _globalTouchPoint = _selectedFrameKey!.currentContext!.findRenderObject()!.localToGlobal(details.localFocalPoint);
-    // });
-    print("_onOverlayTap local: ${localPos}");
-    for (var i = 0; i < _listFrameTemp.length; i++) {
-      var item = _listFrameTemp[i];
-      Offset startOffset = Offset(item.x.toDouble(), item.y.toDouble());
-      Offset endOffset =
-          startOffset.translate(item.width.toDouble(), item.height.toDouble());
-      print("_onOverlayTap i ${i}: ${startOffset} - ${endOffset}");
+    RenderBox canvasBox =
+        canvasKey.currentContext?.findRenderObject() as RenderBox;
+    Offset localPos = canvasBox.globalToLocal(details.localFocalPoint);
 
-      if (FlutterOffsetHelpers()
-          .containOffset(localPos, startOffset, endOffset)) {
-        indexSelected = i;
+    keys.indexed.forEach((element) {
+      RenderBox imageBox = element.$2.currentContext?.findRenderObject() as RenderBox;
+      Offset touch = imageBox.globalToLocal(details.focalPoint);
+
+      Offset start = Offset(0, 0);
+      Offset end = start.translate(_listFrameTemp[element.$1].width, _listFrameTemp[element.$1].height);
+
+      print("object ${element.$1} ${start} ${end} ${touch}");
+
+      if (FlutterOffsetHelpers().containOffset(touch, start, end)) {
+        print("Yolo at ${element.$1}");
+        indexSelected = element.$1;
       }
-    }
+    });
     if (indexSelected != -1) {
       if (_selectFrameTemp?.id != _listFrameTemp[indexSelected].id) {
         setState(() {
@@ -214,19 +195,20 @@ class _TestScreen2State extends State<TestScreen2> {
       if (_selectFrameTemp != null) {
         setState(() {
           _selectFrameTemp = null;
+          indexSelected = -1;
         });
       }
     }
     if (_selectFrameTemp != null) {
-      // chỉ cho phép scale khi thao tác bên trong khung ảnh
-      Offset startOffset = Offset(_selectFrameTemp!.x, _selectFrameTemp!.y);
-      Offset endOffset = startOffset.translate(
-          _selectFrameTemp!.width, _selectFrameTemp!.height);
-      Offset checkOffset = details.focalPoint;
-      // print("111 : ${checkOffset}");
+      RenderBox imageBox = keys[indexSelected].currentContext?.findRenderObject() as RenderBox;
+      Offset touch = imageBox.globalToLocal(details.focalPoint);
 
-      if (FlutterOffsetHelpers()
-          .containOffset(checkOffset, startOffset, endOffset)) {
+      Offset start = Offset(0, 0);
+      Offset end = start.translate(_listFrameTemp[indexSelected].width, _listFrameTemp[indexSelected].height);
+
+      print("object ${indexSelected} ${start} ${end} ${touch}");
+
+      if (FlutterOffsetHelpers().containOffset(touch, start, end)) {
         _isGestureInsideImageFrame = true;
         int index = _listFrameTemp
             .map(
@@ -256,49 +238,14 @@ class _TestScreen2State extends State<TestScreen2> {
       }
     } else {
       _scaleCanvas = _previousScaleCanvas * details.scale.toDouble();
+      setState(() {});
     }
-    setState(() {
-      // _globalTouchPoint = _selectedFrameKey!.currentContext!.findRenderObject()!.localToGlobal(details.localFocalPoint);
-    });
   }
 
   void _onInteractionEnd(ScaleEndDetails details) {
     setState(() {
       _isGestureInsideImageFrame = false;
     });
-  }
-
-  void _onOverlayTap(TapDownDetails details) {
-    int indexSelected = -1;
-    Offset localPos = details.localPosition;
-    //  setState(() {
-    //   _globalTouchPoint = _selectedFrameKey!.currentContext!.findRenderObject()!.localToGlobal(details.localPosition);
-    // });
-    print("_onOverlayTap local: ${localPos}");
-    for (var i = 0; i < _listFrameTemp.length; i++) {
-      var item = _listFrameTemp[i];
-      Offset startOffset = Offset(item.x.toDouble(), item.y.toDouble());
-      Offset endOffset =
-          startOffset.translate(item.width.toDouble(), item.height.toDouble());
-      print("_onOverlayTap i ${i}: ${startOffset} - ${endOffset}");
-      if (FlutterOffsetHelpers()
-          .containOffset(localPos, startOffset, endOffset)) {
-        indexSelected = i;
-      }
-    }
-    if (indexSelected != -1) {
-      if (_selectFrameTemp?.id != _listFrameTemp[indexSelected].id) {
-        setState(() {
-          _selectFrameTemp = _listFrameTemp[indexSelected];
-        });
-      }
-    } else {
-      if (_selectFrameTemp != null) {
-        setState(() {
-          _selectFrameTemp = null;
-        });
-      }
-    }
   }
 
   @override
@@ -362,7 +309,8 @@ class _TestScreen2State extends State<TestScreen2> {
           ? const Center(child: CircularProgressIndicator())
           : Transform.scale(
               //scale canvas
-              scale: _scaleCanvas,
+              key: canvasKey,
+              scale: 1,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: mainListFrameTemp.map(
@@ -376,6 +324,7 @@ class _TestScreen2State extends State<TestScreen2> {
                     final imageFrame = item;
                     // final isSelected = index == _indexSelected;
                     return Positioned(
+                      key: keys[index],
                       top: imageFrame.y.toDouble(),
                       left: imageFrame.x.toDouble(),
                       child: Transform.scale(
@@ -434,7 +383,7 @@ class _TestScreen2State extends State<TestScreen2> {
   Widget _buildOverlayLayer() {
     return IgnorePointer(
       child: Transform.scale(
-        scale: _scaleCanvas,
+        scale: 1,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
