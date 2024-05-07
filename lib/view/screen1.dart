@@ -113,7 +113,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => TestScreen2 (
+                            builder: (context) => TestScreen2(
                               projectRealm: widget.projectRealm,
                               projectId: projects[index].id,
                               projects: projects,

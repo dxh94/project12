@@ -39,7 +39,8 @@ class _TestScreen2State extends State<TestScreen2> {
   Frame? _currentFrame;
   File? selectedImage;
   bool _isExported = false, _isGestureInsideImageFrame = false;
-
+  Offset? _globalTouchPoint;
+  GlobalKey? _selectedFrameKey;
   @override
   void initState() {
     super.initState();
@@ -155,40 +156,41 @@ class _TestScreen2State extends State<TestScreen2> {
     Navigator.of(context).pop();
   }
 
-  void _onOverlayTap(TapDownDetails details) {
-    int indexSelected = -1;
-    Offset localPos = details.localPosition;
-    print("_onOverlayTap local: ${localPos}");
-    for (var i = 0; i < _listFrameTemp.length; i++) {
-      var item = _listFrameTemp[i];
-      Offset startOffset = Offset(item.x.toDouble(), item.y.toDouble());
-      Offset endOffset =
-          startOffset.translate(item.width.toDouble(), item.height.toDouble());
-      print("_onOverlayTap i ${i}: ${startOffset} - ${endOffset}");
-
-      if (FlutterOffsetHelpers()
-          .containOffset(localPos, startOffset, endOffset)) {
-        indexSelected = i;
-      }
-    }
-    if (indexSelected != -1) {
-      if (_selectFrameTemp?.id != _listFrameTemp[indexSelected].id) {
-        setState(() {
-          _selectFrameTemp = _listFrameTemp[indexSelected];
-        });
-      }
-    } else {
-      if (_selectFrameTemp != null) {
-        setState(() {
-          _selectFrameTemp = null;
-        });
-      }
-    }
-  }
+  // void _onOverlayTap(TapDownDetails details) {
+  //   int indexSelected = -1;
+  //   Offset localPos = details.localPosition;
+  //   print("_onOverlayTap local: ${localPos}");
+  //   for (var i = 0; i < _listFrameTemp.length; i++) {
+  //     var item = _listFrameTemp[i];
+  //     Offset startOffset = Offset(item.x.toDouble(), item.y.toDouble());
+  //     Offset endOffset = startOffset.translate(item.width.toDouble(), item.height.toDouble());
+  //     print("_onOverlayTap i ${i}: ${startOffset} - ${endOffset}");
+  //     if (FlutterOffsetHelpers()
+  //         .containOffset(localPos, startOffset, endOffset)) {
+  //       indexSelected = i;
+  //     }
+  //   }
+  //   if (indexSelected != -1) {
+  //     if (_selectFrameTemp?.id != _listFrameTemp[indexSelected].id) {
+  //       setState(() {
+  //         _selectFrameTemp = _listFrameTemp[indexSelected];
+  //       });
+  //     }
+  //   } else {
+  //     if (_selectFrameTemp != null) {
+  //       setState(() {
+  //         _selectFrameTemp = null;
+  //       });
+  //     }
+  //   }
+  // }
 
   void _onInteractionStart(ScaleStartDetails details) {
     int indexSelected = -1;
     Offset localPos = details.localFocalPoint;
+    // setState(() {
+    //   _globalTouchPoint = _selectedFrameKey!.currentContext!.findRenderObject()!.localToGlobal(details.localFocalPoint);
+    // });
     print("_onOverlayTap local: ${localPos}");
     for (var i = 0; i < _listFrameTemp.length; i++) {
       var item = _listFrameTemp[i];
@@ -255,13 +257,48 @@ class _TestScreen2State extends State<TestScreen2> {
     } else {
       _scaleCanvas = _previousScaleCanvas * details.scale.toDouble();
     }
-    setState(() {});
+    setState(() {
+      // _globalTouchPoint = _selectedFrameKey!.currentContext!.findRenderObject()!.localToGlobal(details.localFocalPoint);
+    });
   }
 
   void _onInteractionEnd(ScaleEndDetails details) {
     setState(() {
       _isGestureInsideImageFrame = false;
     });
+  }
+
+  void _onOverlayTap(TapDownDetails details) {
+    int indexSelected = -1;
+    Offset localPos = details.localPosition;
+    //  setState(() {
+    //   _globalTouchPoint = _selectedFrameKey!.currentContext!.findRenderObject()!.localToGlobal(details.localPosition);
+    // });
+    print("_onOverlayTap local: ${localPos}");
+    for (var i = 0; i < _listFrameTemp.length; i++) {
+      var item = _listFrameTemp[i];
+      Offset startOffset = Offset(item.x.toDouble(), item.y.toDouble());
+      Offset endOffset =
+          startOffset.translate(item.width.toDouble(), item.height.toDouble());
+      print("_onOverlayTap i ${i}: ${startOffset} - ${endOffset}");
+      if (FlutterOffsetHelpers()
+          .containOffset(localPos, startOffset, endOffset)) {
+        indexSelected = i;
+      }
+    }
+    if (indexSelected != -1) {
+      if (_selectFrameTemp?.id != _listFrameTemp[indexSelected].id) {
+        setState(() {
+          _selectFrameTemp = _listFrameTemp[indexSelected];
+        });
+      }
+    } else {
+      if (_selectFrameTemp != null) {
+        setState(() {
+          _selectFrameTemp = null;
+        });
+      }
+    }
   }
 
   @override
@@ -326,8 +363,8 @@ class _TestScreen2State extends State<TestScreen2> {
           : Transform.scale(
               //scale canvas
               scale: _scaleCanvas,
-              child: Stack(                                                
-                clipBehavior: Clip.none,                  
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: mainListFrameTemp.map(
                   (item) {
                     final index = _listFrameTemp
@@ -559,6 +596,7 @@ class _TestScreen2State extends State<TestScreen2> {
     );
   }
 }
+
 class FlutterOffsetHelpers {
   bool containOffset(Offset checkOffset, Offset startOffset, Offset endOffset) {
     return (startOffset.dx <= checkOffset.dx &&
