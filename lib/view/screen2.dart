@@ -156,10 +156,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                             id: randomInt(),
                             rotation: 0,
                             scale: 1,
-                            width: 200,
+                            width: 300,
                             x: 0,
                             y: 0,
-                          ),
+                          ),  
                         );
                         setState(() {});
                       }

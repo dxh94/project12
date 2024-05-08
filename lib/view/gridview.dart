@@ -70,7 +70,7 @@ class _PhotoSelectionScreenState extends ConsumerState<PhotoSelectionScreen> {
       // }
       // setState(() {});
 
-    //  updateImageProject();
+      //  updateImageProject();
     }
   }
 
@@ -130,13 +130,14 @@ class _PhotoSelectionScreenState extends ConsumerState<PhotoSelectionScreen> {
     setState(() {});
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(''),
         leading: Container(
+          color: Colors.red,
+          width: 400,
           child: TextButton(
             onPressed: () {
               Navigator.of(context).pop();
@@ -155,12 +156,14 @@ class _PhotoSelectionScreenState extends ConsumerState<PhotoSelectionScreen> {
           GestureDetector(
             onTap: _addImages,
             child: Container(
+              color: Colors.red,
+              width: 50,
               margin: EdgeInsets.only(right: 10),
               child: Text(
                 "Add",
                 style: TextStyle(
                   color: Colors.blue,
-                  fontSize: 16,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
