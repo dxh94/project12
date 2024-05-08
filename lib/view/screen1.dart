@@ -76,7 +76,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
     print("projects ${projects}");
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Project List'),
+        title: const Text('Projects'),
         actions: [
           IconButton(
               onPressed: () {
@@ -113,7 +113,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => TestScreen2 (
+                            builder: (context) => ProjectDetailsScreen(
                               projectRealm: widget.projectRealm,
                               projectId: projects[index].id,
                               projects: projects,
