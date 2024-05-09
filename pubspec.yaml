@@ -49,6 +49,8 @@ dependencies:
   provider: ^6.1.2
   flutter_riverpod: ^2.5.1
   image_gallery_saver: ^2.0.3
+  media_scanner: ^2.1.0
+
 
 dev_dependencies:
   flutter_test:

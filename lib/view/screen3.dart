@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_image_filters/flutter_image_filters.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:project12/helpers/random_number.dart';
 import 'package:project12/model/sub_models/photo_model.dart';
+import 'package:project12/view/saveHelper.dart';
 
 class Screen3 extends StatefulWidget {
   final List<Photos> listPhoto;
@@ -92,7 +96,12 @@ class _Screen3State extends State<Screen3> {
   void _downloadImage() async {
     ui.Image? generatedImage =
         await _generateImage(widget.listPhoto, MediaQuery.of(context).size);
-   
+    ByteData? byteData =
+        await generatedImage.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (byteData != null) {
+      Uint8List data = byteData.buffer.asUint8List();
+      String? outPath = await SaveHelpers().saveToLibrary(data);
+    }
   }
 
   Future<ui.Image> _generateImage(
