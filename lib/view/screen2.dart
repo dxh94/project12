@@ -27,8 +27,7 @@ class ProjectDetailsScreen extends StatefulWidget {
   });
 
   @override
-  _ProjectDetailsScreenState createState() =>
-      _ProjectDetailsScreenState();
+  _ProjectDetailsScreenState createState() => _ProjectDetailsScreenState();
 }
 
 class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
@@ -336,12 +335,12 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                           decoration: BoxDecoration(
                             border: Border.all(
                               color: Colors.blue,
-                              width: 4.0,
+                              width: 4.0/_scaleCanvas,
                             ),
                             borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
-                        
+
                         Positioned(
                           left: -7,
                           top: -7,
@@ -674,6 +673,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     });
   }
 }
+
 class FlutterOffsetHelpers {
   bool containOffset(Offset checkOffset, Offset startOffset, Offset endOffset) {
     return (startOffset.dx <= checkOffset.dx &&
