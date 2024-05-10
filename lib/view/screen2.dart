@@ -301,7 +301,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            if (_selectFrameTemp != null) // Show blue border when selected
+            if (_selectFrameTemp != null)
               Positioned(
                 left: _selectFrameTemp!.x.toDouble(),
                 top: _selectFrameTemp!.y.toDouble(),
@@ -335,12 +335,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                           decoration: BoxDecoration(
                             border: Border.all(
                               color: Colors.blue,
-                              width: 4.0/_scaleCanvas,
+                              width: 4.0 / _scaleCanvas,
                             ),
                             borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
-
                         Positioned(
                           left: -7,
                           top: -7,
@@ -525,7 +524,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
           (_currentFrame!.height - _listFrameTemp[index].height) / 2;
       _listFrameTemp[index].rotation = _previousRotation + details.rotation;
     }
-
     setState(() {});
   }
 
@@ -592,7 +590,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       Offset start = const Offset(0, 0);
       Offset end = start.translate(
           _listFrameTemp[element.$1].width, _listFrameTemp[element.$1].height);
-
       if (FlutterOffsetHelpers().containOffset(touch, start, end)) {
         print("Yolo at ${element.$1}");
         indexSelected = element.$1;
@@ -635,9 +632,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
         //delete image
         var checkStart = start.translate(
             _listFrameTemp[indexSelected].width / 2 - 30 / 2,
-            -40); // 30 : kich thuoc nut red
-        var checkEnd = checkStart.translate(30, 30); // 30 : kich thuoc nut red
-
+            -40); 
+        var checkEnd = checkStart.translate(30, 30); 
         bool isCanDelete =
             FlutterOffsetHelpers().containOffset(touch, checkStart, checkEnd);
         if (isCanDelete) {
