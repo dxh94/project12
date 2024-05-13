@@ -320,7 +320,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                             height: 30,
                             decoration: BoxDecoration(
                               color: Colors.red,
-                              
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: const Icon(
@@ -445,10 +444,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                               imageMedia.contains("https://")
                                           ? Image.network(
                                               imageMedia,
-                                              width:
-                                                  imageFrame.width.toDouble(),
-                                              height:
-                                                  imageFrame.height.toDouble(),
+                                              width: imageFrame.width,
+                                              height: imageFrame.height,
                                               opacity: indexSelected == index
                                                   ? AlwaysStoppedAnimation(
                                                       _blurValue)
