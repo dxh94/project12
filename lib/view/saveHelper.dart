@@ -5,7 +5,6 @@ import 'package:media_scanner/media_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:project12/helpers/random_number.dart';
 
-
 class SaveHelpers {
   Future<bool> checkPermission() async {
     DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
@@ -45,6 +44,7 @@ class SaveHelpers {
     }
     return null;
   }
+
   // Future<bool> onSaveToFile(File? file, String fileName) async {
   // if (file != null) {
   //   final pickedDirectory = await FlutterFileDialog.pickDirectory();

@@ -320,6 +320,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                             height: 30,
                             decoration: BoxDecoration(
                               color: Colors.red,
+                              
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: const Icon(
@@ -586,7 +587,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       RenderBox imageBox =
           element.$2.currentContext?.findRenderObject() as RenderBox;
       Offset touch = imageBox.globalToLocal(details.focalPoint);
-
       Offset start = const Offset(0, 0);
       Offset end = start.translate(
           _listFrameTemp[element.$1].width, _listFrameTemp[element.$1].height);
@@ -631,9 +631,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       } else {
         //delete image
         var checkStart = start.translate(
-            _listFrameTemp[indexSelected].width / 2 - 30 / 2,
-            -40); 
-        var checkEnd = checkStart.translate(30, 30); 
+            _listFrameTemp[indexSelected].width / 2 - 30 / 2, -40);
+        var checkEnd = checkStart.translate(30, 30);
         bool isCanDelete =
             FlutterOffsetHelpers().containOffset(touch, checkStart, checkEnd);
         if (isCanDelete) {
