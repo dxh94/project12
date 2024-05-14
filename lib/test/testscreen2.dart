@@ -432,30 +432,30 @@ class _TestScreen2State extends State<TestScreen2> {
 
   Widget _buildOverlayLayer() {
     return IgnorePointer(
-      child: Transform.scale(
-        scale: _scaleCanvas,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            if (_selectFrameTemp != null) // Show blue border when selected
-              Positioned(
-                left: _selectFrameTemp!.x.toDouble(), // * ( _scaleCanvas),
-                top: _selectFrameTemp!.y.toDouble(), // * ( _scaleCanvas),
-                child: Transform.scale(
-                  scale: _selectFrameTemp!.scale.toDouble(),
-                  child: Transform.rotate(
-                    angle: _selectFrameTemp!.rotation.toDouble(),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.topCenter,
-                      children: [
-                        Positioned(
-                          // top: -30,
-                          child: GestureDetector(
-                            onTap: _deleteSelectedImage,
-                            child: Container(
-                              width: 30,
-                              height: 30,
+      child: Transform.scale(                                                               
+        scale: _scaleCanvas,                                                                
+        child: Stack(                                                                  
+          clipBehavior: Clip.none,                                                          
+          children: [                                                                  
+            if (_selectFrameTemp != null) // Show blue border when selected                             
+              Positioned(                                                                  
+                left: _selectFrameTemp!.x.toDouble(), // * ( _scaleCanvas),                             
+                top: _selectFrameTemp!.y.toDouble(), // * ( _scaleCanvas),                             
+                child: Transform.scale(                                                     
+                  scale: _selectFrameTemp!.scale.toDouble(),                                
+                  child: Transform.rotate(                                                  
+                    angle: _selectFrameTemp!.rotation.toDouble(),                             
+                    child: Stack(                                                           
+                      clipBehavior: Clip.none,                                              
+                      alignment: Alignment.topCenter,                                               
+                      children: [                                                           
+                        Positioned(                                                         
+                          // top: -30,                                                      
+                          child: GestureDetector(                                           
+                            onTap: _deleteSelectedImage,                                    
+                            child: Container(                                               
+                              width: 30,                                                    
+                              height: 30,                                                   
                               decoration: BoxDecoration(
                                 color: Colors.red,
                                 borderRadius: BorderRadius.circular(999),
@@ -568,8 +568,10 @@ class _TestScreen2State extends State<TestScreen2> {
 
   Widget _buildRedIcon() {
     return Positioned(
+      left:  _selectFrameTemp!.x.toDouble() + _selectFrameTemp!.width / 2 + _selectFrameTemp!.height * sin(_selectFrameTemp!.rotation) ,
+      top: _selectFrameTemp!.y.toDouble()-30+_selectFrameTemp!.height/2*(1-cos(_selectFrameTemp!.rotation)),
       // left: _selectFrameTemp?.x.toDouble() +
-      //     _selectFrameTemp?.width / 2 +
+      //     _selectFrameTemp?.width / 2 + 
       //     _selectFrameTemp?.height / 2 * sin(_selectFrameTemp?.rotation),
       // top: _selectFrameTemp?.y.toDouble() -
       //     30 +
@@ -579,7 +581,6 @@ class _TestScreen2State extends State<TestScreen2> {
         child: Transform.rotate(
           angle: 0, // _selectFrameTemp?.rotation.toDouble(),
           child: Container(
-            
             width: 30,
             height: 30,
             decoration: BoxDecoration(

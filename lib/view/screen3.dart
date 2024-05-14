@@ -104,40 +104,37 @@ class _Screen3State extends State<Screen3> {
 
   Future<ui.Image> _generateImage(
       List<Photos> listPhotos, Size imageSize) async {
-    ui.PictureRecorder recorder = ui.PictureRecorder();
-    Canvas canvas = Canvas(recorder);
+    ui.PictureRecorder recorder = ui.PictureRecorder();         
+    Canvas canvas = Canvas(recorder);                 
     final paint = Paint();
-    for (int i = 0; i < listPhotos.length; i++) {
+    for (int i = 0; i < listPhotos.length; i++) {     
       canvas.save();
-      canvas.rotate(listPhotos[i].frame?.rotation ?? 0.0 );
+      canvas.rotate(listPhotos[i].frame?.rotation ?? 0.0);        
       canvas.scale(1 / (listPhotos[i].frame?.scale ?? 1));
-      canvas.drawImageRect(
-        listImageData[i],
+      canvas.drawImageRect(               
+        listImageData[i],                                       
         Rect.fromLTRB(0, 0, listImageData[i].width.toDouble(),
-            listImageData[i].height.toDouble()),
-        Rect.fromLTRB(0, 0, (listPhotos[i].frame?.width ?? 0),
-            (listPhotos[i].frame?.height ?? 0)),
-        paint,
-      );
+            listImageData[i].height.toDouble()),                  
+        Rect.fromLTRB(0, 0, (listPhotos[i].frame?.width ?? 0),        
+            (listPhotos[i].frame?.height ?? 0)),          
+        paint,          
+      );                                                                                                       
       canvas.restore();
-    }
-    return await recorder
+    }         
+    return await recorder    
         .endRecording()
         .toImage(imageSize.width.toInt() * 2, imageSize.height.toInt() * 2);
   }
 }
-
 class GraphicCanvas extends CustomPainter {
-  final Size sizeGraphic;
+  final Size sizeGraphic;         
   final List<Photos> listPhotos;
   final List<ui.Image> listImageData;
-
   GraphicCanvas({
     required this.listPhotos,
     required this.sizeGraphic,
     required this.listImageData,
   });
-
   @override
   void paint(Canvas canvas, Size size) async {
     final paint = Paint();

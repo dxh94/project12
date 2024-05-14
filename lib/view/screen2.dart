@@ -415,22 +415,22 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                 clipBehavior: Clip.none,
                 children: mainListFrameTemp.map(
                   (item) {
-                    final index = _listFrameTemp
-                        .map((e) => e.id)
-                        .toList()
-                        .indexOf(item.id);
-
-                    final imageMedia = _projectDetails!.photos[index].media;
-                    final imageFrame = item;
-
-                    return Positioned(
-                      key: keys[index],
-                      top: imageFrame.y.toDouble(),
-                      left: imageFrame.x.toDouble(),
-                      child: Transform.scale(
-                        scale: imageFrame.scale,
-                        child: Transform.rotate(
-                          angle: imageFrame.rotation,
+                    final index = _listFrameTemp                                                
+                        .map((e) => e.id)                                                
+                        .toList()                                                
+                        .indexOf(item.id);                                                
+                                                
+                    final imageMedia = _projectDetails!.photos[index].media;                                                
+                    final imageFrame = item;                                                
+                                                
+                    return Positioned(                                                
+                      key: keys[index],                                                
+                      top: imageFrame.y.toDouble(),                                                
+                      left: imageFrame.x.toDouble(),                                                
+                      child: Transform.scale(                                                
+                        scale: imageFrame.scale,                                                
+                        child: Transform.rotate(                                                
+                          angle: imageFrame.rotation,                                                
                           child: Stack(
                             clipBehavior: Clip.none,
                             alignment: Alignment.bottomCenter,
