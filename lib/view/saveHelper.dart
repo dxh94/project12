@@ -1,3 +1,4 @@
+
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/services.dart';
@@ -5,8 +6,9 @@ import 'package:media_scanner/media_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:project12/helpers/random_number.dart';
 
+
 class SaveHelpers {
-  Future<bool> checkPermission() async {
+  Future<bool> checkPerrmission() async {
     DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
     final androidInfo = await deviceInfoPlugin.androidInfo;
 
@@ -27,15 +29,16 @@ class SaveHelpers {
       }
     }
   }
-  
+
   Future<String?> saveToLibrary(Uint8List data) async {
     try {
-      if (!(await checkPermission())) {
+      if (!(await checkPerrmission())) {
         return null;
       }
       String originalPath = "/storage/emulated/0/Pictures";
       final outPath = "$originalPath/IMAGE_${randomInt()}.jpg";
       File file = await File(outPath).writeAsBytes(data);
+      // them thu vien media_scanner: ^2.1.0
       String? loadMediaString = await MediaScanner.loadMedia(path: outPath);
       print("result from onSaveToLibrary: ${file.path} - ${loadMediaString}");
       return outPath;
@@ -44,8 +47,7 @@ class SaveHelpers {
     }
     return null;
   }
- 
-  
+
   // Future<bool> onSaveToFile(File? file, String fileName) async {
   // if (file != null) {
   //   final pickedDirectory = await FlutterFileDialog.pickDirectory();
