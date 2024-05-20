@@ -136,7 +136,7 @@ class _PhotoSelectionScreenState extends ConsumerState<PhotoSelectionScreen> {
       appBar: AppBar(
         title: const Text(''),
         leading: Container(
-          color: Colors.red,
+          color: Colors.white,
           width: 400,
           child: TextButton(
             onPressed: () {
@@ -156,7 +156,7 @@ class _PhotoSelectionScreenState extends ConsumerState<PhotoSelectionScreen> {
           GestureDetector(
             onTap: _addImages,
             child: Container(
-              color: Colors.red,
+              color: Colors.transparent,
               width: 50,
               margin: EdgeInsets.only(right: 10),
               child: Text(
@@ -258,5 +258,6 @@ class _PhotoSelectionScreenState extends ConsumerState<PhotoSelectionScreen> {
   Future<void> _addImages() async {
     widget.onUpdateImageSelection(_selectedPhotos);
     Navigator.of(context).pop();
+    
   }
 }

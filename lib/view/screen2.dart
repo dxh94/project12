@@ -563,7 +563,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   }
 
   void _addSelectedImage(List<ImageProject> selectedImages) {
-    setState(() {
       for (var selectedImage in selectedImages) {
         _projectDetails!.photos.add(Photos(randomInt(), selectedImage.file.path,
             frame: Frame(randomInt(), 0, 0, 200, 200, 1, 0)));
@@ -575,8 +574,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
             width: 200,
             x: 0,
             y: 0));
-      }
       keys.add(GlobalKey());
+
+      }
+    setState(() {
+
     });
   }
 
